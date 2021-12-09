@@ -1,0 +1,449 @@
+---
+title: "R for Complete Beginners"
+author: Christina Maimone
+output:
+  html_document:
+    df_print: paged
+    code_download: TRUE
+    toc: TRUE
+    toc_float: TRUE
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+Welcome to R for Complete Beginners!  In this workshop, we're going to cover: 
+
+- The components of RStudio
+- Basics of the R console
+- Calling functions
+- The assignment operator
+- Getting help
+- Working directory
+- Importing a dataset
+- Installing and loading packages
+- Creating and running a script with R code
+- Comments
+- Vectors
+- Missing values
+
+To be fair, this first session can be a little bit boring; but it's really important.  There's a lot of foundational stuff to cover before we actually start working with data.  If, throughout today, you're wondering how this all works for analyzing your data, the simple answer is that it doesn't directly.  We won't be working with a dataset today.  After many years of seeing people jump in and start working with a data set and someone else's code in R, I've found that it's worth it to go through the basics first.  We'll start working with datasets (via data frames) in the next workshop.
+
+
+# Console and R Commands
+
+We can type basic math equations in the console
+
+```{r}
+2 + 2
+3^2
+(2+3)/(5+7)
+```
+
+We can also do Boolean comparisons -- expressions that result in TRUE or FALSE
+
+* == for testing equality
+* ! means NOT
+* & is AND, | is OR
+
+```{r}
+3 > 2
+5 == 25/5
+"cat" != "dog"
+!TRUE
+```
+
+
+```{r}
+TRUE & FALSE
+TRUE | FALSE
+```
+
+
+
+## Tips
+
+* There's a space after the prompt (`>`)
+* If you see a `+` instead of a `>`, R thinks the previous command wasn't finished and expects more input
+  * If you're stuck with a `+`, you can use Control+C or the escape (esc) key to cancel the command and get the normal `>` prompt back.
+* Use the up and down arrow keys to cycle through previous commands
+  * List of previous commands is in the History tab in RStudio (with the Environment tab)
+* Output starts with `[1]`; this number indexes the output values, since there can be more than one value as output
+
+## EXERCISE
+
+Type some math equations in the console.  
+
+## Functions
+
+Functions have a name.  They optionally take one or more input values (arguments).  They optionally return a value (or a more complicated object) or have a side effect (do something).  
+
+Examples: log, round
+
+You can nest function calls:
+
+```{r, eval=FALSE}
+log(16)
+round(2.12345)
+round(log(16))
+```
+
+How do you learn function names?  See the [R Reference Card](https://cran.r-project.org/doc/contrib/Baggott-refcard-v2.pdf) for some basics.  Otherwise, look at the documentation for the packages you're using, or tutorials for the type of analysis you want to do.
+
+The inputs or arguments to a function have names.  When we don't use the name, like above, it matches the values in order.  But we can always use the argument name:
+
+```{r, eval=FALSE}
+round(3.1415, digits=2)
+```
+
+You can find the argument names in the Help or documentation page for the function.  We'll look at these soon.
+
+## Variables
+
+We save and reference individual values, or more complex objects like vectors and data sets, with variables.  We assign values to a name.  
+
+```{r}
+x <- 3
+```
+
+```{r}
+x = 3
+```
+
+The `<-` assignment operator is recommended for clarity.  `=` also works, but because we use `=` for named arguments when we call functions, it can be confusing.
+
+You can see the value of a variable by typing the name in the console and hitting enter.  A variable name by itself is a valid R command.
+
+Variable names are case sensitive.  `X` and `x` are different names.
+
+Everything on the right-hand side of an assignment operator is evaluated first, then the result is saved to the name on the left:
+
+```{r}
+x <- x + 1
+```
+
+
+## EXERCISE
+
+The `runif()` function produces random numbers from a uniform distribution between 0 and 1.  `runif(1)` produces 1 random value.  Save the result of calling this function to a variable.  Then type the variable name in the console to see the value.
+
+## Spacing
+
+You can put spaces almost anywhere in R (Exception: not between multi-character operators like `<-`).
+
+You can break up an R command on multiple lines as long as the partial lines aren't complete R commands.  This means it's best to put line breaks within `()` or after an operator that has a right-hand side (e.g. `+`) so R knows there's more input.
+
+All OK:
+
+```{r, eval=FALSE}
+round(3.1415, digits=2)
+
+round(3.1415, digits = 2)
+
+round(3.1415, 
+      digits=2)
+
+1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 +  
+  11 + 12
+
+x<-3
+
+x <- 3
+```
+
+Works but bad style:
+
+```{r, eval=FALSE}
+round     (1.2345)
+
+x <- 
+  3
+```
+
+
+Doesn't work:
+
+```{r, eval=FALSE}
+2 + 2 
+/ 3
+
+runif(1)
+
+x < - 3  # tests if x is less than -3, not an assignment
+```
+
+
+
+# Environment
+
+When we make variables, they show up in the Environment tab.  The Environment tab has all of the variables and objects that R currently knows about.
+
+Data sets, variables, and objects in R are held in memory.  You generally won't have an issue until your datasets start to approach around 1GB in size.  
+
+# Help
+
+"Help" is a bit of a misnomer for the R Help.  It is documentation that gives you information on different functions and packages.  It is really only useful if you already know the name of the function you want to use.  It's not an effective way to search for a function to do what you want.  
+
+You can open a documentation page by typing at the console:
+
+```{r, eval=FALSE}
+?round
+```
+
+Or use the search box on the Help tab.  Look at the usage section to see function arguments and their default values.  Arguments that don't have `=` and a value after them are required.  Those with `=` have a default value that will be used if you don't specify something different.
+
+Below Usage is a list of arguments with more detailed descriptions.
+
+
+# Files
+
+You can use the Files tab to access the files on your computer.
+
+## Working Directory
+
+Working directory: Where R starts looking for files on your computer.
+
+You can set it or go to it in the Files pane (under the More menu), or with functions.
+
+```{r, eval=FALSE}
+getwd()
+setwd("r-intro-series")  # this is an example -- file path needs to be valid
+```
+
+### EXERCISE
+
+Make the folder on your computer with the files for your workshop the working directory.  Use the `setwd()` function or navigate to the folder in the Files window and then choose Set As Working Directory from the More menu.
+
+## Reading in Data
+
+There are special functions for importing data.  
+
+```{r, eval=FALSE}
+my_data <- read.csv("data/evanston_schools.csv")
+```
+
+Here, there's a data folder inside my working directory, that has the data file in it.  It reads the CSV file in as a data frame, which we'll learn about in the next workshop.  I'm giving the data frame a name, `my_data`, which is just like what we did creating variables above.
+
+### EXERCISE
+
+Read in the `ev_police_jan.csv` data file that's in the data directory.  
+
+
+Note: Evanston police data comes from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/).
+
+# Packages
+
+It is expected that you will use multiple packages written by other people when using R.
+
+You install packages once (for each major version of R).  You load them each time you run R.
+
+Install:
+
+```{r, eval=FALSE}
+install.packages("praise")
+```
+
+Load, so you can more easily use the functions in the package:
+
+```{r, eval=FALSE}
+library(praise)
+```
+
+In R files, which we're going to talk about next, you want to put your library load commands near the top so people know what packages are needed to run the code.
+
+The packages tab has buttons to help you with installing packages.  It also shows you which packages are installed, and which are loaded.
+
+CRAN is the Comprehensive R Archive Network.  It's the primary place people upload their packages for others to use.  Other common places you may install packages from are Bioconductor and GitHub.  
+
+To update a package, you just install it again.
+
+Some packages print messages when you load them:
+
+```{r}
+library(tidyverse)
+```
+
+
+
+# R Code Files
+
+So far, we've been typing in the console.  But we want to write our R code in a file so we keep track of what we've done, and we can reproduce what we're doing.  There are two main options for how to write your R code.
+
+## R Script
+
+We'll create a new file from the File menu or the new file button, and choose R Script.
+
+This is a plain text file with a .R extension.
+
+Everything in the file should be an R command -- no extra text or notes.  Anything that isn't an R command should be a comment, which starts with `#`:
+
+```{r}
+# this is a comment
+x <- 5  # this is also a comment
+```
+
+See the [`example_r_script.R`](example_r_script.R) file for an example.  Here's what's in that file:
+
+```{r, code=xfun::read_utf8("example_r_script.R"), eval=FALSE}
+
+```
+
+
+From a script file, you can send code to the console (you don't have to copy and paste it).  You put your cursor in the line you want to run, then press the Command and Return keys (on a Mac) or Control and Return keys (for Windows).  The cursor progresses to the next command after you hit Return.  
+
+The commands sent to the console are automatically executed.  
+
+If you highlight commands, it will send just what's highlighted.
+
+
+### EXERCISE
+
+Make a new R script.  Load the praise package.  Call the `praise()` function.  Write the code to read in one of the data files we worked with before.  (You can copy and paste the command to do this, or retype it.)  Add a few other commands to your file.
+
+
+## R Markdown
+
+If you want to be able to write notes with your R code or add in analysis or any other text, you may want to use an R Markdown file instead of just an R script.  
+
+This file is an R Markdown file.  It has the file extension .Rmd.  It mixes plain text (with markdown formatting) and chunks of R code.
+
+You can send code to the console from the R code chunks with the same commands you'd use in a R script  
+
+When the output appears under the code chunks, instead of in the console, it's often called an R Notebook.
+
+Learn more about [R Markdown](https://rmarkdown.rstudio.com/).
+
+
+# Vectors
+
+Vectors hold multiple values (all of the same type).  Create a vector with the `c()` function:
+```{r}
+x <- c(1, 4, 6, 3, 4, 2, 3, 4)
+x
+```
+
+## Accessing the Elements
+
+Access elements of the vector using an index for the position.  First element is at position 1.
+```{r}
+x[1]
+```
+
+If you go beyond the range of what's in the vector, you get `NA`, which is missing (see below), not an error:
+
+```{r}
+x[100]
+```
+
+So be careful!
+
+So how do you know how long a vector is?
+
+```{r}
+length(x)
+```
+
+
+To access a range of values, use a colon.  The endpoints of the range are inclusive:
+```{r}
+x[1:3]
+```
+
+You can specify non-adjacent index positions by putting a vector inside [].  Elements are returned in the order the index values appear:
+```{r}
+x[c(3, 1, 2)]
+```
+
+
+If you see a negative index value, it excludes the elements at those positions:
+```{r}
+x[-1:-4]
+```
+
+You can't mix positive and negative indices.
+
+## EXERCISE
+
+In the console or an open R Script file, make a vector called fav_numbers and put 5 numbers in it.  Then write an expression to select just the 4th value from that vector.  Hint: remember the `c()` function.
+
+
+## Vectors with Functions
+
+Some functions take vectors as input and operate on each element.
+```{r}
+log(x)
+```
+
+Functions don't (generally) change their input values:
+```{r}
+x  # still the same as before
+```
+
+Other functions take vectors as input and do something with the whole vector.
+```{r}
+sum(x)
+```
+
+```{r}
+table(x)
+```
+
+With a table, the top line is the unique values, and the bottom line is the counts of each value.
+
+```{r}
+sort(x)
+```
+
+Note that like most other functions, the sort is just to the output -- the vector didn't change.
+
+## Indexing with Boolean Values
+
+We can use vectors in comparisons (boolean operators)
+
+```{r}
+x > 3
+```
+
+TRUE and FALSE are important, because we can use them to select values from vectors -- the elements at positions that correspond to TRUE are selected
+
+```{r}
+x[x > 3]
+```
+
+## EXERCISE
+
+Run the code below to create the vector called y.  Then write an expression to select the values from y that are less than .2
+
+```{r}
+y <- runif(20) # creates 20 random numbers
+```
+
+Bonus: Round the result of your expression above so that each value prints to 2 decimal places only.
+
+
+
+# Missing Values
+
+`NA` is the symbol for missing data; it can be used with any data type
+```{r}
+NA  
+y <- c("dog", "cat", NA, NA, "bird")
+x <- c(NA, 2, NA, 4, NA, 6, NA, 6, 6, 4)
+is.na(x)  
+```
+
+A common operation is to count how many missing values there are in a vector.  We use the function `is.na()` to get TRUE when the value is `NA` and FALSE otherwise.  Then we sum that result; this works because TRUE converts to 1 and FALSE converts to 0.  So it counts the number of missing values (the number of TRUEs).  
+
+```{r}
+sum(c(TRUE, FALSE))
+sum(is.na(x))  
+```
+
+Different functions handle missing values in different ways.  Most commonly, you'll get an answer of `NA` unless you tell the function to remove or exclude the missing values in the calculation.
+```{r}
+mean(x)
+mean(x, na.rm=TRUE)
+```
+
+

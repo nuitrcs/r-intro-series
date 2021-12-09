@@ -1,0 +1,435 @@
+---
+title: 'R: Dates, Factors, Lists, Help'
+author: "Christina Maimone"
+output:
+  html_document:
+    df_print: paged
+    code_download: TRUE
+    toc: TRUE
+    toc_float: TRUE
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+
+# Dates
+
+In most cases, when you read data with dates/times in it into R, it will be read in as character (text) data:
+
+```{r}
+evp <- read.csv("data/ev_police_jan.csv")
+str(evp)
+```
+
+Note: Evanston police data comes from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/).  This is a small subset of data: just January 2017.
+
+Note: if you use the readr package to import your data, it will try to convert things that look like dates to Date objects if it can; you can also specify that a column contains dates/times when you import the data with the readr package.
+
+If you want to use this information in a visualization, or aggregate data by month, or use the date information in other ways, you'll need to convert this information into an object that knows about dates and times.
+
+The easiest way to do this is with the lubridate package (part of tidyverse).
+
+```{r}
+library(lubridate)
+```
+
+It has a series of functions that are named like:
+
+```{r, eval=FALSE}
+ymd()
+ymd_hms()
+dmy()
+dmy_h()
+mdy()
+```
+
+And so on, where y=year, m (in the first part)=month, d=day, h=hour, m (in the second part)=minute, s=second.  With the function name, you are specifying which parts of a date or time appear in the text you're converting and what order the different parts appear in.  You can ignore all of the delimiters and other components like dashes, slashes, or even no delimiter at all.  lubridate can handle most cases:
+
+```{r}
+my_dates <- c("1/13/2020","1/13/20", "01132020", "1-13-2020", "Jan 13 2020", "Jan. 13, 2020") 
+class(my_dates)
+my_dates <- mdy(my_dates)
+class(my_dates)
+```
+
+Without lubridate, you have to specify the format of the datetime object with POSIX standards (see the help page for strftime). 
+
+## EXERCISE
+
+Make two new columns in the evp data frame:
+
+* Date (capitalized) that converts the date column to a Date type
+* datetime: paste (concatenate) the date and time columns together, and then convert the joined string to a datetime object (it will be of type "POSIXct")
+
+
+The command to paste the two columns together is provided to get you started.
+
+```{r, eval=FALSE}
+paste(evp$date, evp$time)
+```
+
+## Example
+
+Now that we have the data information in a date-type format, we can ask questions such as: what day of the week had the most traffic stops?
+
+```{r, eval=FALSE}
+wday(evp$Date, label=TRUE)  # day of the week of the stop (named)
+table(wday(evp$Date, label=TRUE))  # tally these
+```
+
+The data we have is just for January, which means there are more instances of some days of the week than others.  So we want to normalize by the number of Mondays, Tuesdays, etc.
+
+```{r, eval=FALSE}
+seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1)  # days in January 2017
+wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE)  ## as days of the week
+table(wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE))  # tallied
+table(wday(evp$Date, label=TRUE)) / table(wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE)) # together
+```
+
+
+# Factors
+
+Looking at the days of the week above, the output included this text at the bottom:
+
+`Levels: Sun < Mon < Tue < Wed < Thu < Fri < Sat`
+
+This is because the days of the week were returned as a ordered factor -- a categorical variable.
+
+Factors are variables with text labels, but the set of values (called levels) that are allowed for the variable is limited, and the values optionally can have a specific order to them.  
+
+## Why Do I Need Factors?
+
+Let's look at what happens with the days of the week if they are NOT a factor -- just character (text) data instead:
+
+```{r}
+evp$Date <- ymd(evp$date)  # did this in the exercise above
+evp$dow <- as.character(wday(evp$Date, label=TRUE))
+table(evp$dow)
+```
+
+The days are in alphabetical order, not day of the week order!
+
+Or, let's make a plot of the reported race of of the people stopped:
+
+```{r, fig.width=5, fig.height=3}
+ggplot(evp, aes(x=subject_race)) +
+  geom_bar()
+```
+
+This is OK, but ideally the categories of a bar chart would either be in a meaningful order, or ordered by their frequency.
+
+## Make a Factor
+
+In both cases above, the character data is converted into a factor in the process of making a table or the plot.  If we don't like the default ordering, we can control it by explicitly making the variable a factor ourselves and setting the levels.
+
+The default order is alphabetical order, which is dependent on the locale of your computer (language and location settings).  
+
+```{r}
+evp$subject_race <- factor(evp$subject_race, 
+                           levels=c("white", "black", "hispanic", "asian/pacific islander", "other"))
+head(evp$subject_race)
+table(evp$subject_race)
+```
+
+Here, we specified the levels in order, so they will appear that way.  But we didn't say that any category is greater than or less than another -- there isn't an inherit order to the categories.  In cases that there is an order, we can provide that information as well.  I have found very few cases where I need to do this in practice, however.
+
+```{r}
+answers <- c("Very unhappy", "Somewhat unhappy", "Somewhat happy", "Very happy", 
+             "Somewhat unhappy", "Somewhat happy", "Somewhat unhappy", "Somewhat happy",
+             "Very happy", "Very unhappy", "Very happy", "Very happy")
+answers <- factor(answers, 
+                  levels = c("Very unhappy", "Somewhat unhappy", "Somewhat happy", "Very happy"),
+                  ordered = TRUE)
+answers
+```
+
+You can see here that the levels are printed with less than signs `<` indicating a formal ordering that can be used in boolean comparisons.
+
+
+## EXERCISE
+
+Convert the vector below to a factor.  Set the levels in an intentional order.
+
+```{r}
+directions <- c("east", "west", "east", "south", "north", "north", "west", "north", "east")
+```
+
+
+## forcats Package
+
+The forcats package has a number of functions to help you work with factors -- for example, reordering the levels of a factor based on the frequency of the levels, combining low-frequency categories into an "other" category, and dealing with missing values.
+
+With our bar plot above, we could have used the forcats package to re-order our categories in frequency order:
+
+```{r}
+evp$subject_race <- forcats::fct_infreq(evp$subject_race)
+ggplot(evp, aes(x=subject_race)) +
+  geom_bar()
+```
+
+
+## Caution
+
+If you try to change the value of a variable that is a factor to something that isn't one of the factor levels, you will introduce missing values into your data:
+
+```{r}
+my_colors <- factor(c("red", "blue", "green", "red", "red", "blue", "green"))
+my_colors
+my_colors[1] <- "pink"
+my_colors
+```
+
+To avoid this issue, usually the easiest thing to do is to convert the variable to be of character type before changing the values, and then re-make the factor if you need:
+
+```{r}
+my_colors <- as.character(my_colors)
+my_colors[1] <- "pink"
+my_colors <- factor(my_colors)
+my_colors
+```
+
+Also, the default order for factors can be different in different places in the world.  To avoid this issue, either explicitly set the levels for any factor you create or use the forcats package to create a factor instead of the default `factor()` function.
+
+
+# Lists
+
+Lists allow us to store many different types of data to be stored together.  The most common uses of lists I see in R are for storing 
+
+* multiple data frames together in one object (so you can do the same thing to many different data frames with one command)
+* vectors of varying lengths
+* hierarchical data from JSON files or similar files (although there are special packages to work with this type of data)
+* result of a function call that can have output of varying lengths (i.e. `strsplit()`)
+
+Our goals are to:
+
+1. Recognize a list
+2. Access elements in a list
+
+Normally, we'd have a list as a result of some other operation.  Here, I'm making a simple one manually to work with that uses some of the built-in vectors and data sets in R:
+
+```{r}
+state_data <- list(date_created="2021-12-08",        # single value
+                   names = state.name,               # vector
+                   abb = state.abb,                  # vector
+                   vars = as.data.frame(state.x77),  # data frame
+                   center = state.center,            # list
+                   "From R built-in datasets")       # single value, unnamed element
+state_data              
+```
+
+When it prints, you can see that it prints the names of the elements after a `$`.  For elements that don't have a name, it prints the index position in double brackets: `[[]]`
+
+How many elements are in the list (at the top level)
+
+```{r}
+length(state_data)
+```
+
+We can access the elements of the list by name with the `$` notation:
+
+```{r}
+state_data$names
+```
+
+When this prints, there is no name in the output -- we've extracted the element from the list.
+
+We can also access the elements of the list by index position.  If we use single brackets:
+
+```{r}
+state_data[1]
+```
+
+what we get back is still a list:
+
+```{r}
+class(state_data[1])
+```
+
+If we want what's in that position instead, we need to use double brackets:
+
+```{r}
+state_data[[1]]
+```
+
+When the element we want to access also has it's own parts, we can keep adding on brackets (or `$`):
+
+```{r}
+state_data[[5]]
+state_data[[5]][1]
+state_data[[5]][[1]]
+state_data[[5]]$x
+```
+
+We can iterate over lists to do the same thing (apply the same function) to every element:
+
+```{r}
+sapply(state_data, length)
+```
+
+If you want to do more with lists, look at the purrr package.  There are multiple tutorials available online.
+
+
+## EXERCISE
+
+What is the median Area of US states?  Hint: There's an Area variable in the data frame that's in the "vars" element of the state_data list.  There's also a `median()` function.
+
+```{r}
+
+```
+
+
+
+
+## Objects
+
+Objects are used in R to store complex information.  One type of object you may have seen is the result of running a regression model.  
+
+```{r}
+reg1 <- lm(mpg ~ hp + wt, data=mtcars)  # mtcars is a built-in data set
+reg1
+```
+
+You can access the components of these objects as you would with a list:
+
+```{r}
+names(reg1)
+reg1$coefficients
+reg1[[1]]
+```
+
+The objects have other properties too beyond a standard list -- many know how to print a summary of themselves, they may know how to plot themselves, etc.  
+
+
+
+
+# Using the R Help
+
+See the `help.pdf` file in the materials.
+
+We're going to talk through the page for `read.csv()`.
+
+## EXERCISE
+
+Do the first part below where you're unfamiliar with the function
+
+### Part A: table
+
+Look at the help page for `table()` to make a table that also includes the count of any missing values in the vector x.
+
+Bonus: after you do that, look up the help for the `sample()` function to see what's going on there :)
+
+```{r}
+x <- sample(c(letters[1:10], NA, NA, NA), 100, TRUE)
+```
+
+
+### Part B: quantile
+
+Use the `quantile()` function to find the 50th (0.5) and 95th (.95) quantiles of the x vector below.  Look up the help for the function to see how to use it.
+
+```{r}
+x <- rnorm(100)
+```
+
+### Part C: list.files
+
+Use the `list.files()` function to list all files in your working directory that end with ".R".  Look up the help for the function to see how to use it.
+
+Hint: ".R" will include files where the extension starts with ".R" but may have more, such as ".Rmd".  To get just the ".R" files, use the pattern ".R$"
+
+Didn't find any ".R" files?  See what other files are in your working directory instead.  You can also check what your working directory is with `getwd()`
+
+```{r}
+
+```
+
+
+# Question Time!
+
+What are things you've wondered about R?
+
+What are things you find difficult to do?
+
+What's confusing?
+
+
+# Bonus: Useful functions
+
+A few useful functions that I use frequently that weren't covered elsewhere.
+
+## ifelse
+
+`ifelse()` allows you to change the values of a vector based on a conditional test.  It's useful for recoding data, and you can use it in situations where you don't want to change the underlying data.
+
+```{r}
+x <- c(-1, 2, 3, -5, 3, NA, -4, 6)
+ifelse(x >= 0, x, 0)  # replace negative values with 0, leave others alone
+ifelse(is.na(x), 0, x)  # replace missing values with 0, leave others alone
+ifelse(x %% 2 == 0, "even", "odd")  ## remainder of dividing x by 2 is 0 
+```
+
+There's also the useful `replace_na()` function in the tidyr package and `na_if()` in dplyr.
+
+## %in%
+
+`%in%` returns TRUE if the value on the left is in the vector on the right, FALSE otherwise.  Unlike `==`, if the value on the left is `NA`, it will return FALSE unless `NA` is also in the vector on the right:
+
+```{r}
+x <- c(-1, 2, 3, -5, 3, NA, -4, 6)
+x %in% c(1, 2, 3)
+x == 1 | x == 2 | x == 3
+```
+
+```{r}
+state.name
+ifelse(state.name %in% c("Alaska", "Hawaii"), NA, state.name)
+```
+
+
+## paste0
+
+The `paste()` function is used to join pieces of text:
+
+```{r}
+paste("Christina", "Maimone")
+```
+
+The default separator between the strings is a space, but you can change it:
+
+```{r}
+paste("Christina", "Maimone", sep="---")
+```
+
+But, I frequently want to join strings with no space between them:
+
+```{r}
+paste("Christina", "Maimone", sep="")
+```
+
+There's a shortcut for this:
+
+```{r}
+paste0("Christina", "Maimone")
+```
+
+## cat
+
+If you want to print output to the console to copy and paste elsewhere, you may not want quotation marks around strings or the index markers in brackets at the start of the lines.  Use `cat()` to print:
+
+```{r}
+cat(1:10, sep=", ")
+cat(letters, sep="\n")
+```
+
+
+
+

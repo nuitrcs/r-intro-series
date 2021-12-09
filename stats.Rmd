@@ -1,0 +1,547 @@
+---
+title: "Part 4: Data Exploration and Statistics"
+author: Christina Maimone
+output:
+  html_document:
+    df_print: paged
+    code_download: TRUE
+    toc: TRUE
+    toc_float: TRUE
+editor_options:
+  chunk_output_type: console
+---
+
+
+This isn't a statistics workshop; we're going to focus on the code here, not when to use different methods or how to interpret the results.  You'll likely need to do more learning later about the specific models you use in your research. If there's a method here you're unfamiliar with (linear regression, ANOVA), that's OK.  Just covering some of the basics that many different fields use.
+
+# Setup
+
+The file uses the ggplot2 library to make a plot to show something about the data.  You don't need to know ggplot2 for this workshop.  Install the ggplot2 package first if you don't have it already.  
+
+```{r}
+library(ggplot2)
+```
+
+
+
+# Data
+
+## Penguins
+
+We're going to use data on penguins from the palmerpenguins package.  Install the package first if you don't have it already.
+
+If you have it installed, just load it:
+
+```{r}
+library(palmerpenguins)
+```
+
+Here's what's in the data:
+
+```{r}
+penguins
+```
+
+
+## Housing Data
+
+For a second data set, we're going to use some data on houses and their sales prices.  Install the AmesHousing package.
+
+```{r, eval=FALSE}
+install.packages("AmesHousing")
+```
+
+```{r}
+library(AmesHousing)
+names(ames_raw)
+```
+
+These variable names aren't easy to type because of spaces and special characters.  We wouldn't be able to use them easily with the `$` syntax.  I'm going to clean them up with the janitor package, which you may need to install if you haven't before:
+
+```{r, eval=FALSE}
+install.packages("janitor")
+```
+
+I only need to use one function.  Instead of loading the package, I'm going to prefix the function name with the package name:
+
+```{r}
+ames <- janitor::clean_names(ames_raw)
+names(ames)
+```
+
+These names are a bit harder to read, but they easier to type in R. 
+
+Let's order the names 
+
+```{r}
+sort(names(ames))
+```
+
+Now, make two variables that I want to use later:
+
+Combine square footage measures into a new variable
+
+```{r}
+ames$sf <- ames$total_bsmt_sf + ames$x1st_flr_sf + ames$x2nd_flr_sf
+```
+
+And make an indicator variable for single family homes:
+
+```{r}
+ames$single_family <- ames$bldg_type == "1Fam"
+```
+
+
+
+# Summarize by Group
+
+We learned how to subset our data frame, so if we want to compute a measure by group in our data, we could do it on subsets.  But there are functions in R that will help us aggregate our data by categorical variables and compute summary measures.
+
+First, `tapply`, which applies a function to a vector grouped by a second vector.  
+
+```{r, eval=FALSE}
+tapply(vector to compute on, 
+       vector with groups, 
+       name of the function, 
+       optionally any arguments to the function besides the data vector)
+```
+
+```{r}
+tapply(penguins$bill_length_mm,   # vector to compute on
+       penguins$species,  # vector with groups
+       mean,  # name of the function
+       na.rm = TRUE)  # optionally any arguments to the function besides the data vector
+```
+
+We can group by two different grouping variables by combining them in a list.  Lists can hold objects of different types or the same type.  For now, since we haven't covered lists, just know that this is the syntax to group by two different groups.
+
+```{r}
+tapply(penguins$bill_length_mm,   # vector to compute on
+       list(penguins$species, penguins$island),  # vector with groups
+       mean,  # name of the function
+       na.rm = TRUE)  # optionally any arguments to the function besides the data vector
+```
+
+Why are there still `NA` in the output if we removed missing values when computing the mean?  Because there are no observations with those combinations of variables in the data -- no [Gentoo penguins](https://en.wikipedia.org/wiki/Gentoo_penguin) on [Dream island](https://en.wikipedia.org/wiki/Dream_Island) in our data.  
+
+`aggregate()` is similar to `tapply` but produces output in a different format
+
+```{r}
+aggregate(penguins$bill_length_mm,  # data to compute on
+          list(penguins$species, penguins$island),  # groups: it expects a list here
+          mean,  # function
+          na.rm=TRUE)   # additional arguments to the function
+```
+
+We could also use the formula syntax, which we'll learn more about shortly.  This approach gives us better names in the resulting data frame.  It wants `variable ~ group1` or `variable ~ group1 + group2`, with `data` specified.  Because we tell it what data frame to use (`data = pengiuns`), we can reference the column names alone.  The formula syntax then knows where to find those columns.
+
+```{r}
+aggregate(bill_length_mm ~ species + island,
+          data = penguins,
+          mean,
+          na.rm=TRUE)
+```
+
+
+
+## EXERCISE
+
+Compute group means of `body_mass_g` by `sex` with `tapply()` and `aggregate()`.
+
+Use `tapply()`
+
+```{r}
+
+
+```
+
+Use `aggregate()`
+
+```{r}
+
+
+```
+
+
+# Correlation
+
+```{r}
+cor(penguins$bill_depth_mm, penguins$bill_length_mm)
+```
+
+Those missing values again!
+
+```{r}
+cor(penguins$bill_depth_mm, penguins$bill_length_mm,
+    use = "pairwise")
+```
+
+There are different methods.  Default (above) is pearson -- "normal" correlation for continuous variables.
+
+There are also rank (non-parametric) correlations:
+
+```{r}
+cor(penguins$bill_depth_mm, penguins$bill_length_mm,
+    use = "pairwise",
+    method = "kendall")
+```
+
+```{r}
+cor(penguins$bill_depth_mm, penguins$bill_length_mm,
+    use = "pairwise",
+    method = "spearman")
+```
+
+Is our correlation "significant"?
+
+```{r}
+cor.test(penguins$bill_depth_mm, penguins$bill_length_mm,
+    use = "pairwise")
+```
+
+This seems strange that there's a negative correlation between these measures.  Let's look at the data:
+
+```{r}
+ggplot(penguins, aes(x=bill_length_mm,
+                     y=bill_depth_mm,
+                     color=species)) + 
+  geom_point() + 
+  geom_smooth(method="lm", se=FALSE)
+```
+
+What's going on?  Simpson's Paradox.  The relationship in the groups is different within groups vs. overall.  
+
+We need to compute the correlation separately for each group.  Unfortunately, `tapply()` and `aggregate()` don't work, because `cor()` expects two vectors to compute a single correlation.
+
+There are multiple ways we could do this, including a [function](https://personality-project.org/r/html/statsBy.html) in the `psych` package (written by Northwestern's own Bill Revelle) that will let you compute correlation and other statistics by group.  
+
+Or we could do it manually here for practice subsetting data! 
+
+
+## EXERCISE
+
+Compute the correlation between `bill_length_mm` and `bill_depth_mm` for each of the three species ("Adelie", "Chinstrap", "Gentoo") separately (remember to run code above to load libraries and data): 
+
+```{r, eval=FALSE}
+cor(___, ___,
+    use = "pairwise")
+cor(___, ___,
+    use = "pairwise")
+cor(___, ___,
+    use = "pairwise")
+```
+
+
+We can also use `cor()` to compute a correlation matrix between multiple variables at once by supplying a data frame with just numeric columns or matrix instead of two vectors.
+
+```{r}
+# Which are the numeric variables?
+head(penguins)
+penguins[,3:6]
+```
+
+Correlation of just the numeric columns
+
+```{r}
+cor(penguins[,3:6],
+    use = "pairwise")
+```
+
+Correlation just for a subgroup -- choosing a subset of rows
+
+```{r}
+cor(penguins[penguins$species=="Chinstrap",3:6],
+    use = "pairwise")
+```
+
+
+
+
+# T-Test
+
+A t-test lets us determine if the mean of variable is different from some value, or if the means of two groups are statistically different from each other.  
+
+If we have a variable that splits our data into two groups, we can use the formula syntax here `variable ~ groups`:
+
+```{r}
+t.test(body_mass_g ~ sex, data=penguins)
+```
+
+It drops rows/observations with missing values.
+
+Or we can supply two separate vectors of values to compare:
+
+```{r}
+# same as above
+t.test(penguins$body_mass_g[penguins$sex == "male"],
+       penguins$body_mass_g[penguins$sex == "female"])
+```
+
+## EXERCISE
+
+Using the `ames` data, do `single_family` homes have greater `sf` (square footage) than other types of homes?
+
+Hint: `single_family` is a variable we created above that has TRUE/FALSE values (so two groups).
+
+```{r}
+
+```
+
+
+# Chi-squared
+
+If we have two categorical variables (instead of one continuous and one categorical), we can use a chi-squared test to see if there's an association between the variables:
+
+```{r}
+ames$stories <- ifelse(ames$house_style %in% c("1.5Fin", "1.5Unf", "1Story"), "1 story", "2 story")
+table(ames$stories, ames$garage_finish)
+```
+
+
+```{r}
+chisq.test(ames$stories, ames$garage_finish)
+```
+
+
+
+# ANOVA
+
+ANOVA extends the idea of a t-test to more groups.  We can see if the average values of a continuous variable are different for different groups.  We use `aov()` to run the model.
+
+```{r}
+aov(body_mass_g ~ species, data=penguins)
+```
+
+Note: there are a different number of each species of penguins, which means this is an unbalanced ANOVA.  Not ideal statistically.  We get a note to this effect in the output.  
+
+We can get more information from the results with the summary function
+
+```{r}
+my_aov1 <- aov(body_mass_g ~ species, data=penguins)
+summary(my_aov1)
+```
+
+We can add in additional blocking variables or do a two-way ANOVA
+
+```{r}
+my_aov2 <- aov(body_mass_g ~ species + sex, data=penguins)
+summary(my_aov2)
+```
+
+Which of these models is better?  We can use `anova()` to compare models created with `aov()`.
+
+```{r, eval=FALSE}
+anova(my_aov1, my_aov2)
+```
+
+What's the error?  There were missing values in the sex variable, so there's a different number of observations in the two models.  We can address this by using only observations with no missing values at all:
+
+```{r}
+my_aov1 <- aov(body_mass_g ~ species, data=na.omit(penguins))
+my_aov2 <- aov(body_mass_g ~ species + sex, data=na.omit(penguins))
+anova(my_aov1, my_aov2)
+```
+
+Adding sex results in a better fitting model.
+
+
+
+# Regression
+
+
+To compute a linear regression, we use the `lm()` function (linear model) and the special formula syntax
+
+```{r}
+lm(sale_price ~ sf, data=ames)
+```
+
+To include multiple independent or predictor variables, we add them into the right-hand side of the equation.
+
+```{r}
+reg1 <- lm(sale_price ~ bedroom_abv_gr + full_bath + half_bath + tot_rms_abv_grd + sf,
+           data = ames)
+reg1
+```
+
+To get more than just the coefficient estimates in the output, use the summary function on the resulting regression object:
+
+```{r}
+summary(reg1)
+```
+
+The result of the regression is an lm model object, which contains multiple pieces of information.  We can access these different components if we need to.
+
+```{r}
+names(reg1)
+reg1$coefficients
+```
+
+The result of the summary function is a different object, with some different components:
+
+```{r}
+names(summary(reg1))
+```
+
+But we can still extract the information
+
+```{r}
+summary(reg1)$coefficients
+```
+
+## EXERCISE
+
+Run a linear regression model with the dependent (y, outcome) variable of `sf` (square footage), and independent (x, predictor) variables of `lot_area` and `tot_rms_abv_grd`.  Print the summary of the model.
+
+```{r}
+
+```
+
+
+
+
+## Categorical Variables
+
+```{r}
+table(ames$house_style)
+```
+
+What if we put `house_style` into our regression?
+
+```{r}
+reg2 <- lm(sale_price ~ bedroom_abv_gr + full_bath + half_bath + 
+             tot_rms_abv_grd + sf + house_style,
+           data = ames)
+summary(reg2)
+```
+
+But look closely at the variables in the summary above -- the values for `house_style`.  Not all of the categories are included -- one is misisng.  What's going on?
+
+Each of the coefficients for different `house_style` values indicates a difference from the value for a baseline category.  This baseline category is automatically picked (it's the first factor level, which is usually the first value alphabetically unless you've set it otherwise).  This baseline category is accounted for with the Intercept.
+
+A different way to specify the model is to make a separate Intercept for each category.  To do this, we remove the default Intercept from the model with -1:
+
+```{r}
+reg3 <- lm(sale_price ~ -1 + bedroom_abv_gr + full_bath + half_bath + 
+             tot_rms_abv_grd + sf + house_style,
+           data = ames)
+summary(reg3)
+```
+
+
+## Formula Syntax
+
+```
+Symbol   Example            Description 
+------------------------------------------------------------------------------------------------
+~        y ~ x1             Defines the formula (necessary to create a formula object) 
++        y ~ x1 + x2        Include the variable 
+-        y ~ -1 + x1        Delete a term, usually a 1 for the intercept 
+:        y ~ x1 + x1:x2     Interaction term  
+*        y ~ x1*x2          Interaction between the variables and each term individually;  
+                              same as y ~ x1 + x2 + x1:x2
+I()      y ~ I(log(x1))     Wrapper for transforming variables without creating a new variable
+poly()   y ~ poly(x1, 2)    Creates polynomial terms up to the degree specified 
+
+```
+
+Let's add an interaction term:
+
+```{r}
+reg4 <- lm(sale_price ~ -1 + bedroom_abv_gr + full_bath + half_bath + 
+             tot_rms_abv_grd*sf + house_style,
+           data = ames)
+summary(reg4)
+```
+
+## EXERCISE
+
+Run a linear regression model to predict `sf` (square footage) using `lot_area`, `tot_rms_abv_grd`, and an interaction between `fence` and `garage_type`.  (Yes, this is a fairly nonsensical model :) )
+
+```{r}
+
+```
+
+# Logistic Regression
+
+Other types of linear regression models, such as logit and probit models for binary outcome variables, can be run with the `glm()` function.
+
+Let's build a model predicting which houses have central air.  Again, this isn't a great model -- just to see how we structure the function call.
+
+```{r}
+table(ames$central_air)
+```
+
+We need the y/dependent/outcome variable to be 0/1 or TRUE/FALSE, which converts to 0/1
+
+```{r}
+ames$central_air <- ames$central_air == "Y"
+table(ames$central_air)
+```
+
+The main difference from a ordinary linear regression is that we use the `glm()` function instead of `lm()` and we specify the family to indicate the type of model.
+
+```{r}
+logit1 <- glm(central_air ~ sf + year_built + year_remod_add, data=ames,
+              family="binomial")
+summary(logit1)
+```
+
+For a probit instead of logit:
+
+```{r}
+probit1 <- glm(central_air ~ sf + year_built + year_remod_add, data=ames,
+              family = binomial(link = "probit"))
+summary(probit1)
+```
+
+The warning message is because all really large houses in the data set are built/remodeled recently and all have central air.
+
+
+# Probability Distributions
+
+In addition to common statistical tests and models, common probability distributions are also available in R.  Each distribution has a series of functions.  For example, for a normal distribution, functions are computed with a default mean of 0 and standard deviation of 1.  You can change these defaults.  
+
+To have a random draw from a normal distribution
+
+```{r}
+rnorm(1)
+```
+
+Value of the probability density function at the given point (the density)
+
+```{r}
+dnorm(0)  
+```
+
+Cumulative probability to the left of the given point
+
+```{r}
+pnorm(0)  
+```
+
+Value that is at the specified quantile (0-1).  So quantile of .5 is 50% of the probability.  This function is the opposite of `pnorm()`.
+
+```{r}
+qnorm(.5)
+```
+
+Other distributions have the same set of functions, with the names changed for the distribution type:
+
+```{r}
+rexp(1)  # exponential
+rbinom(1, size=10, prob=.5)  # binomial
+runif(1)  # uniform
+```
+
+
+# Learning More
+
+Remember, it's common and expected to search the internet to find the name of the function to perform the statistical test you want (if you can find it in a stats textbook, it's either built into R or someone has created a package).  Include "R" and "stats" or "statistics" in your search with the name of the test you want to run.  If you have trouble finding what you need, our free consulting service for Northwestern researchers is happy to help: https://www.it.northwestern.edu/research/consultation/data-services.html 
+
+For examples of how to run many common statistical models, my first stop is [UCLA's statistical consulting site](https://stats.idre.ucla.edu/other/dae/).   
+
+For many statistical models, you'll install and use a package specific for that model type.  For example, for mixed-effects models, use the lme4 package (here's a [tutorial](https://m-clark.github.io/mixed-models-with-R/) or [another one](https://journals.sagepub.com/doi/full/10.1177/2515245920960351)).  
+
+
+
+
