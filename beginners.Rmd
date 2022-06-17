@@ -27,6 +27,8 @@ Welcome to R for Complete Beginners!  In this workshop, we're going to cover:
 - Comments
 - Vectors
 - Missing values
+- R help/documentation
+- RStudio Projects
 
 To be fair, this first session can be a little bit boring; but it's really important.  There's a lot of foundational stuff to cover before we actually start working with data.  If, throughout today, you're wondering how this all works for analyzing your data, the simple answer is that it doesn't directly.  We won't be working with a dataset today.  After many years of seeing people jump in and start working with a data set and someone else's code in R, I've found that it's worth it to go through the basics first.  We'll start working with datasets (via data frames) in the next workshop.
 
@@ -301,7 +303,7 @@ If you highlight commands, it will send just what's highlighted.
 
 ### EXERCISE
 
-* Install the `fortunes` package
+* Install the `fortunes` package (the code for this does NOT go in the script - just run it in the console)
 * Make a new R script.
 * In that script, load the `fortunes` package.  Call the `fortune()` function from the package.  Write the code to read in one of the data files we worked with before.  (You can copy and paste the command to do this, or retype it.)  Add a few other commands to your file.
 * Save your file.
@@ -499,6 +501,6 @@ To do that, aim for a few good practices:
 * Don't save your R workspace.  Change the setting in Tools > Options menu (Windows) or RStudio > Preferences (Mac)
 
 
-RStudio projects help you do some of the above by setting the working directory for you and reminding you to keep related files together in a directory, separate from other projects.  
+RStudio projects help you do some of the above by setting the working directory for you and reminding you to keep related files together in a directory, separate from other projects.  If you end up using version control like git in the future, RStudio projects also [coordinate well with git repositories](https://sites.northwestern.edu/researchcomputing/2022/05/11/git-with-rstudio-order-matters/).  
 
 
