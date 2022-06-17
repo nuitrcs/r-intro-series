@@ -73,7 +73,8 @@ TRUE | FALSE
 
 ## EXERCISE
 
-Type some math equations in the console.  
+* Type some math equations in the console.  Lacking inspiration?  What's the square root of 394, minus 5, cubed? How many years have people in your family been alive together?  What year was someone who just turned 93 born?  What's the area of a circle with radius 5 (hint: R knows `pi`)?
+* Use the up arrow in the console to recall a previous command you entered.  Then edit it and run the newly edited command
 
 ## Functions
 
@@ -152,7 +153,7 @@ x<-3
 x <- 3
 ```
 
-Works but bad style:
+Works but bad style (don't write code like this):
 
 ```{r, eval=FALSE}
 round     (1.2345)
@@ -168,7 +169,8 @@ Doesn't work:
 2 + 2 
 / 3
 
-runif(1)
+runif
+(1)
 
 x < - 3  # tests if x is less than -3, not an assignment
 ```
@@ -177,9 +179,9 @@ x < - 3  # tests if x is less than -3, not an assignment
 
 # Environment
 
-When we make variables, they show up in the Environment tab.  The Environment tab has all of the variables and objects that R currently knows about.
+When we make variables, they show up in the Environment tab.  The Environment tab has the variables and objects that you create, so you can check there to verify what R knows about).
 
-Data sets, variables, and objects in R are held in memory.  You generally won't have an issue until your datasets start to approach around 1GB in size.  
+Data sets, variables, and objects in R are held in memory.  This means that the data size limits of R are based on the limits of RAM on the computer you are using.  On most relatively recent laptops, you generally won't have an issue until your datasets start to approach around 1GB in size.  
 
 # Help
 
@@ -208,14 +210,14 @@ You can set it or go to it in the Files pane (under the More menu), or with func
 
 ```{r, eval=FALSE}
 getwd()
-setwd("r-intro-series")  # this is an example -- file path needs to be valid
+setwd("r-intro-series/")  # this is an example -- file path needs to be valid
 ```
 
 ### EXERCISE
 
-Make the folder on your computer with the files for your workshop the working directory.  Use the `setwd()` function or navigate to the folder in the Files window and then choose Set As Working Directory from the More menu.
+Make the folder on your computer with the files for this workshop (what you downloaded) the working directory.  Use the `setwd()` function or navigate to the folder in the Files window and then choose Set As Working Directory from the More menu.  Then test that you're in the right place by running `list.files()` in the console.  `dataframes.Rmd` should be listed among the results, as should a `data` folder.
 
-## Reading in Data
+## Reading in (Importing) Data
 
 There are special functions for importing data.  
 
@@ -227,7 +229,7 @@ Here, there's a data folder inside my working directory, that has the data file 
 
 ### EXERCISE
 
-Read in the `ev_police_jan.csv` data file that's in the data directory.  
+Read in (import) the `ev_police_jan.csv` data file that's in the data directory.  
 
 
 Note: Evanston police data comes from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/).
@@ -299,7 +301,10 @@ If you highlight commands, it will send just what's highlighted.
 
 ### EXERCISE
 
-Make a new R script.  Load the praise package.  Call the `praise()` function.  Write the code to read in one of the data files we worked with before.  (You can copy and paste the command to do this, or retype it.)  Add a few other commands to your file.
+* Install the `fortunes` package
+* Make a new R script.
+* In that script, load the `fortunes` package.  Call the `fortune()` function from the package.  Write the code to read in one of the data files we worked with before.  (You can copy and paste the command to do this, or retype it.)  Add a few other commands to your file.
+* Save your file.
 
 
 ## R Markdown
@@ -445,5 +450,55 @@ Different functions handle missing values in different ways.  Most commonly, you
 mean(x)
 mean(x, na.rm=TRUE)
 ```
+
+
+# Using the R Help
+
+We're going to talk through the page for `read.csv()`.
+
+## EXERCISE
+
+Do the first part below where you're unfamiliar with the function
+
+### Part A: table
+
+The code below creates a vector with random letters in it.  
+
+```{r}
+x <- sample(c(letters[1:10], NA, NA, NA), 100, TRUE)
+```
+
+Your job is to make a frequency table of the values in the vector (get the count of how many times each letter appears).  Look at the help page for `table()` to figure out how to make a table that also includes the count of any missing values in the vector x.
+
+Don't forget to run the code to create `x` before trying to make a table of it.
+
+Bonus: after you do that, look up the help for the `sample()` function to see what's going on there :)
+
+
+
+### Part B: quantile 
+
+Bonus if you have time: Use the `quantile()` function to find the 50th (0.5) and 95th (.95) quantiles of the w vector below.  Look up the help for the function to see how to use it.
+
+```{r}
+w <- rnorm(100)
+```
+
+
+# RStudio Projects and R Workflow
+
+Part of using R successfully, and using R in a way that supports reproducible research, is keeping everything organized.  
+
+To do that, aim for a few good practices:
+
+* Put all of the files (scripts, data, output) for each project in a directory (folder) on your computer, separate from other projects.
+* Use relative file paths, not absolute ones, to refer to files.  This allows you to move the directory or share it with someone else.
+* Don't change your raw data - it should not be overwritten.  Read your data into R, change it in R, and then write a new copy of the data to a new file.  
+* Separate data cleaning and analysis scripts.  A common workflow is raw data > data cleaning script in R > write a new version of the data > analysis scripts in R using the new data.  This will help you keep track of the changes you make to the data, instead of having to re-run a bunch of exploratory analysis just to make sure you got all of the data cleaning steps run.  You can also change your data cleaning script as needed, re-run it, and then re-run your analysis scripts on the newly changed data to keep everything in sync.
+* You should be able to re-run any R scripts from the beginning all the way through.  This means that all commands for an analysis need to be in the script.  You should be able to reproduce what you did yourself.  
+* Don't save your R workspace.  Change the setting in Tools > Options menu (Windows) or RStudio > Preferences (Mac)
+
+
+RStudio projects help you do some of the above by setting the working directory for you and reminding you to keep related files together in a directory, separate from other projects.  
 
 

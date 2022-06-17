@@ -1,5 +1,5 @@
 ---
-title: "Part 4: Data Exploration and Statistics"
+title: "Group Summaries and Statistics"
 author: Christina Maimone
 output:
   html_document:
@@ -199,14 +199,15 @@ cor.test(penguins$bill_depth_mm, penguins$bill_length_mm,
     use = "pairwise")
 ```
 
-This seems strange that there's a negative correlation between these measures.  Let's look at the data:
+This seems strange that there's a negative correlation between these measures.  Let's look at the data (black line is the overall relationship, colored lines are for each species):
 
 ```{r}
 ggplot(penguins, aes(x=bill_length_mm,
                      y=bill_depth_mm,
                      color=species)) + 
   geom_point() + 
-  geom_smooth(method="lm", se=FALSE)
+  geom_smooth(method="lm", se=FALSE) +
+  geom_smooth(method="lm", se=FALSE, color="black", mapping=aes(group=1))
 ```
 
 What's going on?  Simpson's Paradox.  The relationship in the groups is different within groups vs. overall.  
@@ -223,12 +224,9 @@ Or we could do it manually here for practice subsetting data!
 Compute the correlation between `bill_length_mm` and `bill_depth_mm` for each of the three species ("Adelie", "Chinstrap", "Gentoo") separately (remember to run code above to load libraries and data): 
 
 ```{r, eval=FALSE}
-cor(___, ___,
-    use = "pairwise")
-cor(___, ___,
-    use = "pairwise")
-cor(___, ___,
-    use = "pairwise")
+cor(___, ___, use = "pairwise")
+cor(___, ___, use = "pairwise")
+cor(___, ___, use = "pairwise")
 ```
 
 
@@ -243,14 +241,14 @@ penguins[,3:6]
 Correlation of just the numeric columns
 
 ```{r}
-cor(penguins[,3:6],
+cor(penguins[, 3:6],
     use = "pairwise")
 ```
 
 Correlation just for a subgroup -- choosing a subset of rows
 
 ```{r}
-cor(penguins[penguins$species=="Chinstrap",3:6],
+cor(penguins[penguins$species=="Chinstrap", 3:6],
     use = "pairwise")
 ```
 

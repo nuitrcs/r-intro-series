@@ -1,0 +1,487 @@
+---
+title: "Data Manipulation"
+author: Christina Maimone
+output:
+  html_document:
+    df_print: paged
+    code_download: TRUE
+    toc: TRUE
+    toc_float: TRUE
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+This session covers some useful functions and gives examples of how to accomplish some common data tasks in R.
+
+Reading in the policing data:
+
+```{r}
+evp <- read.csv("data/ev_police_jan.csv")
+```
+
+Note: Evanston police data comes from the [Stanford Open Policing Project](https://openpolicing.stanford.edu/data/).  This is a small subset of data: just January 2017.
+
+And we'll use the penguins data for some exercises too
+
+```{r}
+library(palmerpenguins)
+```
+
+
+
+# Useful functions
+
+
+## ifelse
+
+`ifelse()` allows you to change the values of a vector based on a conditional test.  It's useful for recoding data, and you can use it in situations where you don't want to change the underlying data.
+
+The format is:
+
+```{r, eval=FALSE}
+ifelse(test_condition, value_if_true, value_if_false)
+```
+
+where the test condition is usually some comparison or operation on a vector - anything that results in TRUE or FALSE values  
+
+```{r}
+x <- c(-1, 2, 3, -5, 3, NA, -4, 6)
+x >= 0
+
+ifelse(x >= 0, x, 0)  # replace negative values with 0, leave others alone
+
+ifelse(is.na(x), 0, x)  # replace missing values with 0, leave others alone
+
+ifelse(x %% 2 == 0, "even", "odd")  ## remainder of dividing x by 2 is 0 
+```
+
+There's also the useful `replace_na()` function in the tidyr package and `na_if()` in dplyr.
+
+## EXERCISE
+
+Where the value in the vector below is positive, take the square root.  Where it is negative, substitute in `NA`.
+
+```{r}
+y <- c(4, -1, 3, 6, -7, 10, 20)
+```
+
+
+
+## %in%
+
+`%in%` returns TRUE if the value on the left is in the vector on the right, FALSE otherwise.  Unlike `==`, if the value on the left is `NA`, it will return FALSE unless `NA` is also in the vector on the right:
+
+```{r}
+x <- c(-1, 2, 3, -5, 3, NA, -4, 6)
+x %in% c(1, 2, 3)
+x == 1 | x == 2 | x == 3
+```
+
+```{r}
+state.name  # built-in vector in R
+
+ifelse(state.name %in% c("Alaska", "Hawaii"), NA, state.name)
+```
+
+
+## EXERCISE
+
+Select the rows from the `evp` data where the vehicle make is one of FIAT, DATS, GEO, JAGU, or PEUG
+
+```{r}
+
+```
+
+
+## paste
+
+The `paste()` function is used to join pieces of text:
+
+```{r}
+paste("Christina", "Maimone")
+```
+
+The default separator between the strings is a space, but you can change it:
+
+```{r}
+paste("Christina", "Maimone", sep="---")
+```
+
+But, I frequently want to join strings with no space between them:
+
+```{r}
+paste("Christina", "Maimone", sep="")
+```
+
+There's a shortcut for this:
+
+```{r}
+paste0("Christina", "Maimone")
+```
+
+
+## EXERCISE
+
+`state.abb` has two-letter abbreviations for US states.  `state.region` has the region for each US state.  Use `paste()` to join the info from these two vectors together, so the output has entries that look like:
+
+```
+"AL: South"         "AK: West"          "AZ: West"          "AR: South"  ...
+```
+
+```{r}
+
+```
+
+## seq
+
+`seq()` is used to generate sequences of numbers.  You can specify the interval between values or how many values you want.
+
+```{r}
+seq(from=1, to=10, by=2)
+```
+
+Note that the sequence output will only have values that are <= the "to" value.  
+
+```{r}
+seq(0, 10, length.out=4)
+```
+
+```{r}
+seq(0, 1, .1)
+```
+
+## EXERCISE
+
+Use the `seq()` function to select every 5th row from `state.x77` (it's a matrix built in to R - you can index it like a data frame).  
+
+Things you need to figure out: how do you know what the sequence should go to?  How do you use the result of seq() to then select the rows?
+
+```{r}
+
+```
+
+
+
+
+
+
+# Dates
+
+In most cases, when you read data with dates/times in it into R, it will be read in as character (text) data:
+
+```{r}
+str(evp)
+```
+
+If you want to use this information in a visualization, or aggregate data by month, or use the date information in other ways, you'll need to convert this information into an object that knows about dates and times.
+
+One way to do this is by using the readr package (part of tidyverse) to import your data,.  There is a `read_csv()` function instead of a `read.csv()` function.  It will try to convert things that look like dates to Date objects if it can; you can also specify that a column contains dates/times when you import the data with the readr package.
+
+```{r}
+library(readr)
+
+readr_evp <- read_csv("data/ev_police_jan.csv")
+
+str(readr_evp)
+```
+
+But, if you aren't using readr, or need to perform other operations with dates, you can do so with the lubridate package (also from tidyverse).  
+
+```{r}
+library(lubridate)
+```
+
+It has a series of functions that are named like:
+
+```{r, eval=FALSE}
+ymd()
+ymd_hms()
+dmy()
+dmy_h()
+mdy()
+```
+
+And so on, where y=year, m (in the first part)=month, d=day, h=hour, m (in the second part)=minute, s=second.  With the function name, you are specifying which parts of a date or time appear in the text you're converting and what order the different parts appear in.  You can ignore all of the delimiters and other components like dashes, slashes, or even no delimiter at all.  lubridate can handle most cases:
+
+```{r}
+my_dates <- c("1/13/2020","1/13/20", "01132020", "1-13-2020", "Jan 13 2020", "Jan. 13, 2020") 
+class(my_dates)
+my_dates <- mdy(my_dates)
+class(my_dates)
+```
+
+Without lubridate, you have to specify the format of the datetime object with POSIX standards (see the help page for strftime). 
+
+## EXERCISE
+
+Make two new columns in the evp data frame:
+
+* Date (capitalized) that converts the date column to a Date type - you can use a function with just the date components, such as mdy(), dmy(), or ymd()
+* datetime: paste (concatenate) the date and time columns together, and then convert the joined string to a datetime object (if you're checking, it will be of type "POSIXct") - you'll need to use a function with both date and time components
+
+```{r}
+
+```
+
+
+## Example
+
+Now that we have the data information in a date-type format, we can ask questions such as: what day of the week had the most traffic stops?
+
+```{r, eval=FALSE}
+wday(evp$Date, label=TRUE)  # day of the week of the stop (named)
+table(wday(evp$Date, label=TRUE))  # tally these
+```
+
+The data we have is just for January, which means there are more instances of some days of the week than others.  So we want to normalize by the number of Mondays, Tuesdays, etc.
+
+```{r, eval=FALSE}
+seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1)  # days in January 2017
+wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE)  ## as days of the week
+table(wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE))  # tallied
+table(wday(evp$Date, label=TRUE)) / table(wday(seq.Date(ymd("2017-01-01"), ymd("2017-01-31"), 1), label=TRUE)) # together
+```
+
+
+# Factors
+
+Looking at the days of the week above, the output included this text at the bottom:
+
+`Levels: Sun < Mon < Tue < Wed < Thu < Fri < Sat`
+
+This is because the days of the week were returned as a ordered factor -- a categorical variable.
+
+Factors are variables with text labels, but the set of values (called levels) that are allowed for the variable is limited, and the values optionally can have a specific order to them.  
+
+## Why Do I Need Factors?
+
+Let's look at what happens with the days of the week if they are NOT a factor -- just character (text) data instead:
+
+```{r}
+evp$Date <- ymd(evp$date)  # did this in the exercise above
+evp$dow <- as.character(wday(evp$Date, label=TRUE))  # as.character makes it not a factor - just text data
+table(evp$dow)
+```
+
+The days are in alphabetical order, not day of the week order!
+
+Or, let's make a plot of the reported race of the people stopped:
+
+```{r, fig.width=5, fig.height=3}
+library(ggplot2)
+ggplot(evp, aes(x=subject_race)) +
+  geom_bar()
+```
+
+This is OK, but ideally the categories of a bar chart would either be in a meaningful order, or ordered by their frequency.
+
+## Make a Factor
+
+In both cases above, the character data is converted into a factor in the process of making a table or the plot.  If we don't like the default ordering, we can control it by explicitly making the variable a factor ourselves and setting the levels.
+
+The default order is alphabetical order, which is dependent on the locale of your computer (language and location settings).  
+
+```{r}
+evp$subject_race <- factor(evp$subject_race, 
+                           levels=c("white", "black", "hispanic", "asian/pacific islander", "other"))
+head(evp$subject_race)
+table(evp$subject_race)
+```
+
+Here, we specified the levels in order, so they will appear that way.  But we didn't say that any category is greater than or less than another -- there isn't an inherit order to the categories, even though we did set the order that they will display in.  
+
+There aren't many cases where you're likely to do operations on a factor and actually need R to know which category is greater than another, but you can indicate that the factor is ordered if needed (ordered categorical data instead of just categorical data).  Answers to scales from surveys is one case where ordered factors can be useful.  
+
+```{r}
+answers <- c("Very unhappy", "Somewhat unhappy", "Somewhat happy", "Very happy", 
+             "Somewhat unhappy", "Somewhat happy", "Somewhat unhappy", "Somewhat happy",
+             "Very happy", "Very unhappy", "Very happy", "Very happy")
+answers <- factor(answers, 
+                  levels = c("Very unhappy", "Somewhat unhappy", "Somewhat happy", "Very happy"),
+                  ordered = TRUE)
+answers
+```
+
+You can see here that the levels are printed with less than signs `<` indicating a formal ordering that can be used in boolean comparisons.
+
+
+## EXERCISE
+
+Convert the vector below to a factor.  Set the levels in an intentional order.
+
+```{r}
+directions <- c("east", "west", "east", "south", "north", "north", "west", "north", "east")
+```
+
+
+## forcats Package
+
+The forcats package has a number of functions to help you work with factors -- for example, reordering the levels of a factor based on the frequency of the levels, combining low-frequency categories into an "other" category, and dealing with missing values.
+
+With our bar plot above, we could have used the forcats package to re-order our categories in frequency order:
+
+```{r}
+evp$subject_race <- forcats::fct_infreq(evp$subject_race)
+ggplot(evp, aes(x=subject_race)) +
+  geom_bar()
+```
+
+
+## Caution
+
+If you try to change the value of a variable that is a factor to something that isn't one of the factor levels, you will introduce missing values into your data:
+
+```{r}
+my_colors <- factor(c("red", "blue", "green", "red", "red", "blue", "green"))
+my_colors
+my_colors[1] <- "pink"
+my_colors
+```
+
+To avoid this issue, usually the easiest thing to do is to convert the variable to be of character type before changing the values, and then re-make the factor if you need:
+
+```{r}
+my_colors <- as.character(my_colors)
+my_colors[1] <- "pink"
+my_colors <- factor(my_colors)
+my_colors
+```
+
+Also, the default order for factors can be different in different places in the world.  To avoid this issue, either explicitly set the levels for any factor you create or use the forcats package to create a factor instead of the default `factor()` function.
+
+
+# Counting with sum()
+
+It's often useful to count how many observations meet some criteria.  For example, how many of the drivers in the `evp` data are female?  Or how many penguins have a bill length of more than 43 mm.  `table()` is one option when you just need the frequency of a value, but for the question of bill length, a table won't work.  
+
+Instead, like we did with counting missing values, we can use `sum()` to count the number of TRUE values.
+
+```{r}
+penguins$bill_length_mm > 43
+sum(penguins$bill_length_mm > 43)
+sum(penguins$bill_length_mm > 43, na.rm=TRUE) 
+```
+
+If we want to compute that as a proportion:
+
+```{r}
+sum(penguins$bill_length_mm > 43, na.rm=TRUE)/nrow(penguins) ## all penguins
+sum(penguins$bill_length_mm > 43, na.rm=TRUE)/sum(!is.na(penguins$bill_length_mm)) ## non-missing values
+```
+
+
+## EXERCISE
+
+You can do these with `sum()` but there are other methods that will work as well.
+
+How many drivers in the `evp` data are "white"?  
+
+How many drivers in the `evp` data are "white" and "female"?  
+
+Remember: you can use `names(evp)` to see what the column names are.
+
+Challenge: What proportion of Gentoo penguins have a body mass over 6000g?
+
+```{r}
+
+```
+
+
+
+# Basic Plots
+
+I recommend using the ggplot2 package for data visualization (separate workshop), but it's useful to know how to make a few basic plots without it. 
+
+## hist
+
+You can make a histogram with the `hist()` function.  Visualizing the distribution of any continuous variable is always a good idea.  
+
+`mtcars` is a built-in data frame
+
+```{r}
+hist(mtcars$disp)
+```
+
+Control the number of bars
+
+```{r}
+hist(mtcars$disp, breaks=5)
+
+hist(mtcars$disp, breaks=6)
+```
+
+But it has a bias towards even break points.  You can control the breaks precisely if you do need to.
+
+## EXERCISE
+
+Make a histogram of bill_length_mm from `penguins`.  Does the overall pattern change if you increase the number of breaks?
+
+```{r}
+
+```
+
+
+## barplot
+
+To make a bar plot, you already have to have the count of each category computed.  Luckily, you can use the table function to do this.
+
+```{r}
+table(mtcars$cyl)
+barplot(table(mtcars$cyl))
+```
+
+## EXERCISE
+
+Make a barplot of subject_sex in the evp data.  
+
+```{r}
+
+```
+
+
+## Scatter Plot
+
+You can make scatter plots with the `plot()` function, which will also make line plots.
+
+```{r}
+plot(mtcars$mpg, mtcars$disp)
+```
+
+
+## EXERCISE
+
+Make a plot of `bill_length_mm` and `bill_depth_mm` from the `penguins` data.
+
+```{r}
+
+```
+
+
+## boxplot
+
+You can make a single box plot, but box plots are most useful for comparing between groups.  To plot by group, we have to use a special formula syntax with a ~
+
+```{r}
+boxplot(mtcars$mpg)
+boxplot(mtcars$mpg ~ mtcars$cyl)
+```
+
+
+## EXERCISE
+
+Make a boxplot of `body_weight_g` from `penguins` by `species`
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+

@@ -152,7 +152,7 @@ summary(penguins)
 
 Run the code that creates the `x` data frame.
 
-Using the `x` data frame:
+Using the `x` data frame, write commands to figure out:
 
 * How many rows and columns?
 * Names of the variables?
@@ -339,7 +339,7 @@ head(penguins)
 Put the old names back
 ```{r}
 names(penguins) <- oldnames
-head(penguins)
+head(penguins)  # check
 ```
 
 
@@ -356,19 +356,29 @@ max(penguins$bill_length_mm, na.rm=TRUE)
 ```
 
 Now to get the observations (rows) for the penguins with that max value:
+
+```{r}
+penguins[penguins$bill_length_mm == 59.6,]
+```
+
+But, we don't want to have to look up the value first, and then type it in.  We can put the expression that got us that max value directly in the code:
+
 ```{r}
 penguins[penguins$bill_length_mm == max(penguins$bill_length_mm, na.rm=TRUE),]
 ```
 
-Break it out into steps:
+We could also break it out into steps and save the max value in a variable we can use:
+
 ```{r}
 max_bill_length <- max(penguins$bill_length_mm, na.rm=TRUE)
 penguins[penguins$bill_length_mm == max_bill_length,]
 ```
 
+Why?  What if something in the data changes?  Then we'd have the wrong value written in (hard coded) into our code.  We want to avoid "hard coding" specific values that are derived from data into our scripts where we can.  
+
 ## EXERCISE
 
-Using `x` created above: select the rows from `x` where `days` is at its minimum value.
+Using `x` created above (data frame of months): select the rows from `x` where `days` is at its minimum value.
 
 
 ```{r}
@@ -385,9 +395,10 @@ x[which.min(x$days), ]
 
 # Making new variables
 
-We can add a new variable to the data frame by naming it with the `$` notation, and assigning a value to it:
+We can add a new variable to the data frame by naming it with the `$` notation, and assigning a value to it:.  For example, make a variable that has bill length in **centimeters (cm)** instead of **millimeters (mm)**
+
 ```{r}
-penguins$bill_length_cm <- penguins$bill_length_mm / 10  # make new variable
+penguins$bill_length_cm <- penguins$bill_length_mm / 10  # make new variable: note CM instead of MM in the name
 names(penguins)  # check to see that it was added
 penguins[, c("bill_length_cm", "bill_length_mm")]  # select the two vars to view them
 ```
@@ -410,7 +421,7 @@ Using `x` created above: make a new variable as part of `x`, called `weeks`, tha
 
 Remember: `NA` denotes a missing value.  
 
-Any missing values?  Show up in summary() output:
+Any missing values?  They will show up in summary() output:
 ```{r}
 summary(penguins)
 ```
@@ -446,7 +457,7 @@ y <- data.frame(age = c(40, 38, 44, 41, 68, 6, 35, 29),
 table(penguins$species)
 ```
 
-`species` is a factor; let's un-factor it first so we can change values -- this is an extra step related to it being a factor.  We'll convert it to be data of type character, which is just free text.
+`species` is a factor (a special type for categorical variables); let's un-factor it first so we can change values -- this is an extra step related to it being a factor.  We'll convert it to be data of type character, which is just free text.
 
 ```{r}
 penguins$species <- as.character(penguins$species)

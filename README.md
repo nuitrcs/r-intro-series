@@ -19,7 +19,7 @@ If this workshop does not fit with your schedule, or you have significant experi
 
 [Install R and RStudio](https://sites.northwestern.edu/researchcomputing/resources/r-and-rstudio/) on your own laptop (both are free). If you can't install these programs or run into issues installing packages, [RStudio Cloud](https://sites.northwestern.edu/researchcomputing/resources/r-and-rstudio/#option-2-rstudio-cloud) is a good option.
 
-Also, install the tidyverse package. Instructions are at the bottom of the [installation instructions page](https://sites.northwestern.edu/researchcomputing/resources/r-and-rstudio/). If you run into installation issues (about 5-10% of you are likely to based on past workshops), post an issue on the Canvas discussion board or email the workshop instructors.
+Also, install the tidyverse package. Instructions are at the bottom of the [installation instructions page](https://sites.northwestern.edu/researchcomputing/resources/r-and-rstudio/). If you run into installation issues, plan to stick around on Zoom after the first session to ask question, or [request a consultation](https://www.it.northwestern.edu/research/consultation/data-services.html).
 
 ### Get Materials
 
@@ -41,7 +41,7 @@ You may be interested in our [recommended resources](https://sites.northwestern.
 
 You can [get free help](https://www.it.northwestern.edu/research/consultation/data-services.html) with R and other data and programming issues from Research Computing Services.  
 
-You could work through our [R Tidyverse Workshop](https://github.com/nuitrcs/r-tidyverse) materials on your own, or sign up for that series of workshops this winter.  Workshops will be announced on our [listserv](https://listserv.it.northwestern.edu/scripts/wa.exe?SUBED1=NUIT-research&A=1) once registration is open.
+You could work through our [R Tidyverse Workshop](https://github.com/nuitrcs/r-tidyverse) materials on your own, or sign up for that series of workshops.  Workshops are announced on our [listserv](https://listserv.it.northwestern.edu/scripts/wa.exe?SUBED1=NUIT-research&A=1) and are posted on our [training page](https://www.it.northwestern.edu/research/training.html).
 
 
 # Materials
@@ -50,7 +50,14 @@ For the workshops, you'll want to [download this repository](https://sites.north
 
 * [R for Complete Beginners](https://nuitrcs.github.io/r-intro-series/html/beginners.html)
 * [Data Frames](https://nuitrcs.github.io/r-intro-series/html/dataframes.html)
+* [Data Manipulation](https://nuitrcs.github.io/r-intro-series/html/datamanipulation.html)
 * [Basic Statistics](https://nuitrcs.github.io/r-intro-series/html/stats.html)
+
+
+## Extra Materials
+
+These are lessons from previous versions of this workshop that we're not currently covering.  Visualization with ggplot2 is taught as a separate workshop.
+
 * [Visualization with ggplot2](https://nuitrcs.github.io/r-intro-series/html/ggplot2.html)
 * [Some Confusing Parts](https://nuitrcs.github.io/r-intro-series/html/topics1.html)
 
