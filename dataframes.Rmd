@@ -447,7 +447,7 @@ Run the code to create a y data frame.  Then remove the rows where the height va
 
 ```{r}
 y <- data.frame(age = c(40, 38, 44, 41, 68, 6, 35, 29),
-                heignt = c(NA, 65, 68, 70, 63, 50, NA, 73))
+                height = c(NA, 65, 68, 70, 63, 50, NA, 73))
 ```
 
 
